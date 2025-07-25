@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture & Audio Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: rgb(255, 255, 255);
+            overflow: hidden;
+            direction: rtl;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* Welcome and Questions pages */
+        .text-page {
+            text-align: center;
+            padding: 0;
+        }
+
+        .logo-banner {
+            background-color: #f5f5f5;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .logo-header {
+            width: 250px;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .text-page h1 {
+            font-size: 4.5rem;
+            margin-bottom: 30px;
+            color: #333;
+            margin-top: 100px;
+        }
+
+        .text-page p {
+            font-size: 2rem;
+            color: rgb(45, 75, 90);
+            margin-bottom: 40px;
+            line-height: 1.8;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .welcome-text {
+            font-size: 2.3rem;
+            color: rgb(45, 75, 90);
+            line-height: 2.2;
+            margin-bottom: 50px;
+            padding: 0 20px;
+            margin-top: 80px;
+        }
+
+        .start-btn, .restart-btn, .contact-btn {
+            background-color: rgb(9, 37, 62);
+            color: white;
+            padding: 25px 80px;
+            border: none;
+            border-radius: 45px;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            position: relative;
+            z-index: 10;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .start-btn:hover, .restart-btn:hover, .contact-btn:hover {
+            background-color: rgb(15, 50, 82);
+        }
+
+        /* Picture slides */
+        .picture-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 100px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .picture {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        /* Play button */
+        .play-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: rgb(9, 37, 62);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+
+        .play-button.playing {
+            background-color: #4CAF50;
+        }
+
+        .play-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            margin-right: 2px;
+        }
+
+        .play-button.playing svg {
+            margin-right: 0;
+        }
+
+        /* Page counter */
+        .page-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            color: rgb(45, 75, 90);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px 20px;
+            border-radius: 25px;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        /* Navigation arrows */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(9, 37, 62, 0.3);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+
+        .nav-arrow:hover {
+            background-color: rgb(9, 37, 62);
+        }
+
+        .nav-arrow.prev {
+            right: 20px;
+        }
+
+        .nav-arrow.next {
+            left: 20px;
+        }
+
+        .nav-arrow svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .text-page h1 {
+                font-size: 3rem;
+            }
+
+            .text-page p {
+                font-size: 1.5rem;
+            }
+
+            .welcome-text {
+                font-size: 1.8rem;
+            }
+
+            .start-btn, .restart-btn, .contact-btn {
+                font-size: 1.5rem;
+                padding: 20px 60px;
+            }
+
+            .nav-arrow {
+                width: 35px;
+                height: 35px;
+            }
+
+            .play-button {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .page-counter {
+                font-size: 1.1rem;
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            /* Ensure picture container doesn't overlap page counter */
+            .picture-container {
+                height: calc(100vh - 120px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Slide -->
+    <div class="slide active text-page" id="welcome">
+        <div class="logo-banner">
+            <img src="https://raw.githubusercontent.com/KYK25/AudioKYK25/main/EMFTlogo.png" alt="Logo" class="logo-header">
+        </div>
+        <p class="welcome-text">مرحبا بيكم في التطبيق متاعنا! هوني تنجم تكتشف الخبر السار، معناها الانجيل، بطريقة ساهلة. في كل صفحة، تنجم تنزل عالزر باش تسمع الحكاية وتقراها. كل ما تدوّر الصفحة عالايسار تلقى حكاية جديدة.</p>
+        <button class="start-btn" onclick="showSlide(1)">ابدأ</button>
+    </div>
+
+    <!-- Picture Slides (1-32) -->
+    <!-- These will be generated dynamically -->
+
+    <!-- Questions Slide -->
+    <div class="slide text-page" id="questions">
+        <div class="logo-banner">
+            <img src="https://raw.githubusercontent.com/KYK25/AudioKYK25/main/EMFTlogo.png" alt="Logo" class="logo-header">
+        </div>
+        <p class="welcome-text">احنا مسيحين توانسة يشرفنا و يسعدنا انو نحكيولك على الانجيل اذا عندك استعداد تسمع.</p>
+        <a href="https://www.elmassihfitunis.com/contact/" target="_blank" class="contact-btn">اتصل بنا</a>
+    </div>
+
+    <script>
+        // Configuration - adjusted to 32 slides
+        const totalSlides = 32;
+        const baseImageUrl = 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/';
+        const baseAudioUrl = 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/';
+        
+        // Audio files mapping - adjusted for new slide positions
+        const audioFiles = {
+            1: 'Any3%20section%2001.m4a',
+            2: 'Test.mp3',
+            3: 'I%20made%20Audio%203%20Edited.mp3',
+            4: 'Any3%20section%2004.m4a',
+            // Slides 5, 6, 7 are new - no audio yet
+            8: 'Any3%20section%2005.m4a',
+            9: 'Any3%20section%2006.m4a',
+            10: 'Any3%20section%2007.m4a',
+            11: 'Any3%20section%2008.m4a',
+            12: 'Any3%20section%2009.m4a',
+            13: 'Any3%20section%2010.m4a',
+            14: 'Any3%20section%2011.m4a',
+            15: 'Any3%20section%2012.m4a',
+            16: 'Any3%20section%2013.m4a',
+            17: 'Any3%20section%2014.m4a',
+            18: 'Any3%20section%2015.m4a',
+            19: 'Any3%20section%2016.m4a',
+            20: 'Any3%20section%2017.m4a',
+            21: 'Any3%20section%2018.m4a',
+            22: 'Any3%20section%2019.m4a',
+            23: 'Any3%20section%2020.m4a'
+        };
+
+        // Image URLs mapping
+        const imageUrls = {
+            1: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic1.png',
+            2: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic2.png',
+            3: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic3.png',
+            4: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic4.png',
+            5: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic5.png',
+            6: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic6.png',
+            7: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic7.png',
+            8: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic8.png',
+            9: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic9.png',
+            10: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic10.png',
+            11: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic11.png',
+            12: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic12.png',
+            13: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic13.png',
+            14: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic14.png',
+            15: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic15.png',
+            16: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic16.png',
+            17: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic17.png',
+            18: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic18.png',
+            19: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic19.png',
+            20: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic20.png',
+            21: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic21.png',
+            22: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic22.png',
+            23: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic23.png',
+            24: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic24.png',
+            25: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic25.png',
+            26: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic26.png',
+            27: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic27.png',
+            28: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic28.png',
+            29: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic29.png',
+            30: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic30.png',
+            31: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic31.png',
+            32: 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/pic32.png'
+        };
+
+        // First image URL (no longer used separately)
+        const firstImageUrl = 'https://raw.githubusercontent.com/KYK25/AudioKYK25/main/ChatGPT%20Image%20Jul%2014%2C%202025%2C%2009_17_19%20AM.png';
+
+        let currentSlide = 0;
+        let currentAudio = null;
+
+        // Generate picture slides
+        function generateSlides() {
+            const welcomeSlide = document.getElementById('welcome');
+            const questionsSlide = document.getElementById('questions');
+            
+            for (let i = 1; i <= totalSlides; i++) {
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.id = `slide-${i}`;
+                
+                // Use mapped image URL or placeholder
+                const imageUrl = imageUrls[i] || `${baseImageUrl}placeholder${i}.jpg`;
+                
+                slide.innerHTML = `
+                    <div class="nav-arrow prev" onclick="previousSlide()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                        </svg>
+                    </div>
+                    <div class="nav-arrow next" onclick="nextSlide()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </div>
+                    <div class="play-button" id="play-${i}" onclick="toggleAudio(${i})">
+                        <svg viewBox="0 0 24 24" class="play-icon">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <svg viewBox="0 0 24 24" class="pause-icon" style="display: none;">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                        </svg>
+                    </div>
+                    <div class="picture-container">
+                        <div class="loading" id="loading-${i}">جاري التحميل...</div>
+                        <img class="picture" id="img-${i}" src="${imageUrl}" alt="صورة ${i}" onclick="toggleAudio(${i})" style="display: none;">
+                    </div>
+                    <div class="page-counter">${i} من ${totalSlides}</div>
+                `;
+                
+                questionsSlide.parentNode.insertBefore(slide, questionsSlide);
+                
+                // Handle image loading
+                const img = slide.querySelector(`#img-${i}`);
+                const loading = slide.querySelector(`#loading-${i}`);
+                
+                img.onload = function() {
+                    loading.style.display = 'none';
+                    img.style.display = 'block';
+                };
+                
+                img.onerror = function() {
+                    loading.textContent = 'الصورة غير متوفرة';
+                };
+            }
+        }
+
+        // Show specific slide
+        function showSlide(slideIndex) {
+            // Stop any playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                updatePlayButton(currentSlide, false);
+            }
+
+            // Hide all slides
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => slide.classList.remove('active'));
+
+            // Show requested slide
+            if (slideIndex === 0) {
+                document.getElementById('welcome').classList.add('active');
+            } else if (slideIndex === totalSlides + 1) {
+                document.getElementById('questions').classList.add('active');
+            } else {
+                document.getElementById(`slide-${slideIndex}`).classList.add('active');
+            }
+
+            currentSlide = slideIndex;
+        }
+
+        // Navigation functions
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            } else if (currentSlide === totalSlides) {
+                showSlide(totalSlides + 1); // Go to questions
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            } else if (currentSlide === 1) {
+                showSlide(0); // Go to welcome
+            }
+        }
+
+        // Audio control
+        function toggleAudio(slideNumber) {
+            const audioFile = audioFiles[slideNumber];
+            if (!audioFile) {
+                console.log('Audio file not available for slide', slideNumber);
+                return;
+            }
+
+            if (currentAudio && currentAudio.src.includes(audioFile)) {
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                    updatePlayButton(slideNumber, true);
+                } else {
+                    currentAudio.pause();
+                    updatePlayButton(slideNumber, false);
+                }
+            } else {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    updatePlayButton(currentSlide, false);
+                }
+
+                currentAudio = new Audio(baseAudioUrl + audioFile);
+                currentAudio.play();
+                updatePlayButton(slideNumber, true);
+
+                currentAudio.addEventListener('ended', () => {
+                    updatePlayButton(slideNumber, false);
+                });
+            }
+        }
+
+        // Update play button appearance
+        function updatePlayButton(slideNumber, isPlaying) {
+            const playButton = document.getElementById(`play-${slideNumber}`);
+            if (!playButton) return;
+
+            const playIcon = playButton.querySelector('.play-icon');
+            const pauseIcon = playButton.querySelector('.pause-icon');
+
+            if (isPlaying) {
+                playButton.classList.add('playing');
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            } else {
+                playButton.classList.remove('playing');
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            }
+        }
+
+        // Touch/swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diffX = touchStartX - touchEndX;
+            const diffY = Math.abs(touchStartY - touchEndY);
+            
+            // Only register horizontal swipes (ignore vertical)
+            if (Math.abs(diffX) > swipeThreshold && diffY < 100) {
+                if (diffX > 0) {
+                    // Swiped left - go to previous in RTL
+                    if (currentSlide === 0) {
+                        // Can't go before welcome page
+                        return;
+                    } else if (currentSlide === totalSlides + 1) {
+                        // From questions page, go to last slide
+                        showSlide(totalSlides);
+                    } else if (currentSlide > 1) {
+                        previousSlide();
+                    } else if (currentSlide === 1) {
+                        // From first slide, go to welcome
+                        showSlide(0);
+                    }
+                } else {
+                    // Swiped right - go to next in RTL
+                    if (currentSlide === totalSlides + 1) {
+                        // Can't go past questions page
+                        return;
+                    } else if (currentSlide === 0) {
+                        // From welcome page, go to first slide
+                        showSlide(1);
+                    } else if (currentSlide < totalSlides) {
+                        nextSlide();
+                    } else if (currentSlide === totalSlides) {
+                        // From last slide, go to questions
+                        showSlide(totalSlides + 1);
+                    }
+                }
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                nextSlide(); // In RTL, left arrow goes forward
+            } else if (e.key === 'ArrowRight') {
+                previousSlide(); // In RTL, right arrow goes back
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generateSlides();
+            
+            // Add touch listeners
+            document.addEventListener('touchstart', handleTouchStart);
+            document.addEventListener('touchend', handleTouchEnd);
+        });
+    </script>
+</body>
+</html>
